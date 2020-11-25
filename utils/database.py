@@ -1,58 +1,70 @@
-import json
+import sqlite3
 
 """
-Concerned with storing and retrieving books from a json file.
+Concerned with storing and retrieving books from a database.
 
-[
-    {
-        'name': 'Book name',
-        'author': 'Book author',
-        'read': False
-    }
-
-]
 """
-
-books_file = 'books.json'
 
 
 def create_book_table():
-    with open(books_file, 'w') as file:
-        json.dump([], file)
+    connection = sqlite3.connect('data.db')
+    cursor = connection.cursor()
+
+    cursor.execute('CREATE TABLE IF NOT EXISTS books(name text primary key, author text, read integer)')
+
+    connection.commit()
+    connection.close()
 
 
 # add the book
 def add_book(name, author):
-    books = get_books()
-    books.append({'name': name, 'author': author, 'read': False})
-    _save_all_books(books)
+    connection = sqlite3.connect('data.db')
+    cursor = connection.cursor()
+
+    try:
+        # Preventing sql intervention attacks
+        cursor.execute('INSERT INTO books VALUES(?, ?, 0)', (name, author))
+    except:
+        print("Book already exists in database!")
+
+    connection.commit()
+    connection.close()
 
 
 # Show book list
 def get_books():
-    with open(books_file, 'r') as file:
-        return json.load(file)
+    connection = sqlite3.connect('data.db')
+    cursor = connection.cursor()
 
+    cursor.execute('SELECT * FROM books')
+    books = [{'name': row[0], 'author': row[1], 'read': row[2]} for row in cursor.fetchall()]  # will be received a
+    # dictionary
 
-def _save_all_books(books):
-    with open(books_file, 'w') as file:
-        json.dump(books, file)
+    connection.close()
+
+    return books
 
 
 # If book is read
-def mark_book_as_read(name):
-    books = get_books()
-    for book in books:
-        if book['name'] == name:
-            book['read'] = True
-    _save_all_books(books)
+def mark_book_status(name, status):
+    connection = sqlite3.connect('data.db')
+    cursor = connection.cursor()
+
+    if status:
+        cursor.execute('UPDATE books SET read=1 where name=?', (name,))
+    else:
+        cursor.execute('UPDATE books SET read=0 where name=?', (name,))
+
+    connection.commit()
+    connection.close()
 
 
 # Delete book
 def delete_book(name):
-    books = get_books()
-    # add each book to the new list if book['name'] != # name
-    books = [book for book in books if book['name'] != name]
-    _save_all_books(books)
+    connection = sqlite3.connect('data.db')
+    cursor = connection.cursor()
 
+    cursor.execute('DELETE FROM books WHERE name=?', (name,))
 
+    connection.commit()
+    connection.close()
