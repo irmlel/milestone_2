@@ -6,8 +6,6 @@ Enter:
 - 'l' to list all books
 - 'r' to mark a book as read
 - 'd' to delete a book
-- 'f' to add list to file
-- 'o' to load list from file
 - 'q' to quit
 
 Your choice:"""
@@ -42,7 +40,7 @@ def prompt_add_book():
 def list_books():
     books = database.get_books()
     for book in books:
-        read = 'YES' if book['read'] == '1' else 'NO'
+        read = 'YES' if book['read'] else 'NO'
         print(f"{book['name']} by {book['author']}, read: {read}")
 
 
